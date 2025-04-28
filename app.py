@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
 
-pip install selenium
+
 # Mapping scraped metric to final output column prefix
 metric_mapping = {
     "Total Income": "Total Income",
