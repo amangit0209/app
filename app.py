@@ -27,9 +27,9 @@ time_periods = ["Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
 # Excel file name
 excel_filename = "Financials_Data_Filled.xlsx"
 
-st.title("📊 BSE Financials Scraper (Multi-URL Supported)")
+st.title("📊 BSE Financials Scraper")
 
-urls_input = st.text_area("Enter Financials Page URLs (one per line or comma separated):")
+urls_input = st.text_area("Enter Stock Page URLs (one per line or comma separated):")
 
 if st.button("Scrape All and Save"):
     if urls_input.strip():
