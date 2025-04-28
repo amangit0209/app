@@ -1,13 +1,11 @@
 import streamlit as st
 import pandas as pd
 import os
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+import requests
+from bs4 import BeautifulSoup
 import time
 
-
-# Mapping scraped metric to final output column prefix
+# Mapping and periods remain same
 metric_mapping = {
     "Total Income": "Total Income",
     "Expenditure": "Expenditure",
@@ -22,95 +20,93 @@ metric_mapping = {
     "NPM %": "NPM (%)"
 }
 
-# Fixed periods we expect
 time_periods = ["Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
 
-# Excel file name
 excel_filename = "Financials_Data_Filled.xlsx"
 
-st.title("📊 BSE Financials Scraper")
+st.title("📊 BSE Financials Scraper (No Selenium Version)")
 
-urls_input = st.text_area("Enter Stock Page URLs (one per line or comma separated):")
+urls_input = st.text_area("Enter Financials Page URLs (one per line or comma separated):")
 
 if st.button("Scrape All and Save"):
     if urls_input.strip():
-        # Setup selenium once
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
 
         all_new_rows = []
 
         urls = [url.strip() for url in urls_input.replace(',', '\n').split('\n') if url.strip()]
         st.write(f"Found {len(urls)} URLs to process.")
 
-        try:
-            for idx, url in enumerate(urls, 1):
-                st.info(f"🔄 Processing ({idx}/{len(urls)}): {url}")
-                driver.get(url)
-                time.sleep(5)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+        }
 
-                try:
-                    # Scrape table
-                    table = driver.find_element(By.XPATH, '//table[@ng-bind-html="trustAsHtml(reportData.QtlyinCr)"]')
-                    rows = table.find_elements(By.TAG_NAME, 'tr')
+        for idx, url in enumerate(urls, 1):
+            st.info(f"🔄 Processing ({idx}/{len(urls)}): {url}")
+            try:
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
 
-                    data = []
-                    for row in rows:
-                        cols = row.find_elements(By.TAG_NAME, 'td')
-                        cols_text = [col.text.strip() for col in cols]
-                        if any(cols_text):
-                            data.append(cols_text)
+                soup = BeautifulSoup(response.text, 'html.parser')
 
-                    if not data:
-                        st.warning(f"No data found in table for URL: {url}")
-                        continue
+                # Find the table
+                table = soup.find('table', {'ng-bind-html': 'trustAsHtml(reportData.QtlyinCr)'})
 
-                    header = data[0]
-                    data_rows = data[1:]
+                if table is None:
+                    st.warning(f"No financial table found for URL: {url}")
+                    continue
 
-                    df = pd.DataFrame(data_rows, columns=header)
+                data = []
+                rows = table.find_all('tr')
+                for row in rows:
+                    cols = row.find_all('td')
+                    cols_text = [col.get_text(strip=True) for col in cols]
+                    if any(cols_text):
+                        data.append(cols_text)
 
-                    # Extract company name
-                    page_title = driver.title
-                    company_name = page_title.split('|')[0].strip()
+                if not data:
+                    st.warning(f"No data found in table for URL: {url}")
+                    continue
 
-                    new_row = {"Company Name": company_name}
+                header = data[0]
+                data_rows = data[1:]
 
-                    for metric, output_prefix in metric_mapping.items():
-                        matching_row = df[df[header[0]].str.strip() == metric]
+                df = pd.DataFrame(data_rows, columns=header)
 
-                        if not matching_row.empty:
-                            for period in time_periods:
-                                try:
-                                    value = matching_row.iloc[0][period]
-                                    if value != "":
-                                        new_row[f"{output_prefix} ({period})"] = value
-                                    else:
-                                        new_row[f"{output_prefix} ({period})"] = ""
-                                except KeyError:
+                # Extract company name from title
+                company_name_tag = soup.find('title')
+                company_name = company_name_tag.get_text(strip=True).split('|')[0].strip() if company_name_tag else "Unknown Company"
+
+                new_row = {"Company Name": company_name}
+
+                for metric, output_prefix in metric_mapping.items():
+                    matching_row = df[df[header[0]].str.strip() == metric]
+
+                    if not matching_row.empty:
+                        for period in time_periods:
+                            try:
+                                value = matching_row.iloc[0][period]
+                                if value != "":
+                                    new_row[f"{output_prefix} ({period})"] = value
+                                else:
                                     new_row[f"{output_prefix} ({period})"] = ""
-                        else:
-                            for period in time_periods:
+                            except KeyError:
                                 new_row[f"{output_prefix} ({period})"] = ""
+                    else:
+                        for period in time_periods:
+                            new_row[f"{output_prefix} ({period})"] = ""
 
-                    all_new_rows.append(new_row)
+                all_new_rows.append(new_row)
 
-                except Exception as e:
-                    st.error(f"Error processing URL: {url} → {e}")
-
-        finally:
-            driver.quit()
+            except Exception as e:
+                st.error(f"Error processing URL: {url} → {e}")
 
         if all_new_rows:
-            # Merge with existing
             if os.path.exists(excel_filename):
                 existing_df = pd.read_excel(excel_filename)
                 updated_df = pd.concat([existing_df, pd.DataFrame(all_new_rows)], ignore_index=True)
             else:
                 updated_df = pd.DataFrame(all_new_rows)
 
-            # Save
             updated_df.to_excel(excel_filename, index=False)
             st.success(f"✅ Saved {len(all_new_rows)} new entries successfully!")
 
