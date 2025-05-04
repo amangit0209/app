@@ -1,4 +1,4 @@
-pandas
+streamlit
 selenium
-bs4
+pandas
 openpyxl
