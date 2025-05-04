@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bse-financials-app
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: streamlit run app.py --server.port $PORT
