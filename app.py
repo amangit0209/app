@@ -25,7 +25,7 @@ default_time_periods = ["Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23
 
 excel_filename = "Financials_Data_Filled.xlsx"
 
-st.title("📊 BSE Financials Scraper")
+st.title("📊 BSE Stocks Financial Report Scraper- Multi-Stock")
 
 # Metric selection
 selected_metrics = st.multiselect("Select metrics to extract:", options=list(default_metric_mapping.keys()), default=list(default_metric_mapping.keys()))
@@ -133,3 +133,4 @@ if st.button("Scrape All and Save"):
             st.warning("No new data to save!")
     else:
         st.warning("Please enter at least one URL!")
+st.markdown("<hr style='margin-top: 40px;'><div style='text-align: center;'>Developed by - <strong>Aman</strong></div>", unsafe_allow_html=True)
