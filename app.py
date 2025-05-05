@@ -48,18 +48,20 @@ if additional_period:
         if period not in selected_time_periods:
             selected_time_periods.append(period)
 
-urls_input = st.text_area("Enter Financials Page URLs (one per line or comma separated):")
+security_codes_input = st.text_area("Enter Security Codes (one per line or comma separated):")
+
+# Generate URLs from the security codes
+security_codes = [code.strip() for code in security_codes_input.replace(',', '\n').split('\n') if code.strip()]
+urls = [f"https://www.bseindia.com/stock-share-price/{code}/{code}/{code}/financials-results/" for code in security_codes]
 
 if st.button("Scrape All and Save"):
-    if urls_input.strip():
-        # Setup selenium once
+    if urls:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         driver = webdriver.Chrome(options=chrome_options)
 
         all_new_rows = []
 
-        urls = [url.strip() for url in urls_input.replace(',', '\n').split('\n') if url.strip()]
         st.write(f"Found {len(urls)} URLs to process.")
 
         try:
