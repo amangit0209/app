@@ -4,4 +4,4 @@ services:
     env: python
     plan: free
     buildCommand: ""
-    startCommand: streamlit run Quarterly.py --server.port $PORT
+    startCommand: streamlit run Qapp.py --server.port $PORT
