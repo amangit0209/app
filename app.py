@@ -71,7 +71,8 @@ if st.button("Scrape All and Save"):
                 time.sleep(5)
 
                 try:
-                    table = driver.find_element(By.XPATH, '//table[@ng-bind-html="trustAsHtml(reportData.QtlyinCr)"]')
+                    wait = WebDriverWait(driver, 20) # Wait up to 20 seconds
+                    table = wait.until(EC.presence_of_element_located((By.XPATH, '//table[@ng-bind-html="trustAsHtml(reportData.QtlyinCr)"]')))
                     rows = table.find_elements(By.TAG_NAME, 'tr')
 
                     data = []
