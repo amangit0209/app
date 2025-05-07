@@ -4,6 +4,8 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Default mappings and periods
@@ -21,11 +23,11 @@ default_metric_mapping = {
     "NPM %": "NPM (%)"
 }
 
-default_time_periods = ["Dec-25", "Sep-25", "Jun-25", "Mar-25","Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
+default_time_periods = ["Dec-25", "Sep-25", "Jun-25", "Mar-25", "Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
 
 excel_filename = "Financials_Data_Filled.xlsx"
 
-st.title("📊 BSE Quaterly Trends Scraper")
+st.title("\U0001F4CA BSE Quaterly Trends Scraper")
 
 # Metric selection
 selected_metrics = st.multiselect("Select metrics to extract:", options=list(default_metric_mapping.keys()), default=list(default_metric_mapping.keys()))
@@ -36,19 +38,15 @@ if additional_metric:
         if metric not in selected_metrics:
             selected_metrics.append(metric)
 
-# Generate metric mapping dynamically
 metric_mapping = {metric: default_metric_mapping.get(metric, metric) for metric in selected_metrics}
 
 # Time period selection
 additional_periods_input = st.text_input("Add more time periods (comma-separated):")
-
-# Combine and deduplicate
 combined_time_periods = default_time_periods.copy()
 if additional_periods_input:
     additional_periods = [p.strip() for p in additional_periods_input.split(',') if p.strip()]
-    combined_time_periods = list(dict.fromkeys(default_time_periods + additional_periods))  # maintain order, remove duplicates
+    combined_time_periods = list(dict.fromkeys(default_time_periods + additional_periods))
 
-# Let user select and reorder freely
 selected_time_periods = st.multiselect(
     "Select and order time periods to extract:",
     options=combined_time_periods,
@@ -56,8 +54,6 @@ selected_time_periods = st.multiselect(
 )
 
 security_codes_input = st.text_area("Enter Security Codes (one per line or comma separated):")
-
-# Generate URLs from the security codes
 security_codes = [code.strip() for code in security_codes_input.replace(',', '\n').split('\n') if code.strip()]
 urls = [f"https://www.bseindia.com/stock-share-price/{code}/{code}/{code}/financials-results/" for code in security_codes]
 
@@ -65,7 +61,9 @@ if st.button("Scrape All and Save"):
     if urls:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
 
         all_new_rows = []
 
@@ -73,14 +71,23 @@ if st.button("Scrape All and Save"):
 
         try:
             for idx, url in enumerate(urls, 1):
-                st.info(f"🔄 Processing ({idx}/{len(urls)}): {url}")
+                st.info(f"\U0001F504 Processing ({idx}/{len(urls)}): {url}")
                 driver.get(url)
-                time.sleep(5)
+                time.sleep(6)
 
                 try:
-                    table = driver.find_element(By.XPATH, '//table[@ng-bind-html="trustAsHtml(reportData.QtlyinCr)"]')
-                    rows = table.find_elements(By.TAG_NAME, 'tr')
+                    tables = driver.find_elements(By.TAG_NAME, 'table')
+                    table = None
+                    for tbl in tables:
+                        if "Total Income" in tbl.text:
+                            table = tbl
+                            break
 
+                    if not table:
+                        st.warning(f"No relevant table found for URL: {url}")
+                        continue
+
+                    rows = table.find_elements(By.TAG_NAME, 'tr')
                     data = []
                     for row in rows:
                         cols = row.find_elements(By.TAG_NAME, 'td')
@@ -142,4 +149,5 @@ if st.button("Scrape All and Save"):
             st.warning("No new data to save!")
     else:
         st.warning("Please enter at least one URL!")
+
 st.markdown("<hr style='margin-top: 40px;'><div style='text-align: center;'>Developed by - <strong>Aman</strong></div>", unsafe_allow_html=True)
