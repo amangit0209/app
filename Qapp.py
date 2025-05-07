@@ -21,11 +21,11 @@ default_metric_mapping = {
     "NPM %": "NPM (%)"
 }
 
-default_time_periods = ["Dec-25", "Sep-25", "Jun-25", "Mar-25","Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
+default_time_periods = ["Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
 
 excel_filename = "Financials_Data_Filled.xlsx"
 
-st.title("📊 BSE Quaterly Trends Scraper")
+st.title("📊 BSE Stocks Financial Report Scraper- Multi-Stock")
 
 # Metric selection
 selected_metrics = st.multiselect("Select metrics to extract:", options=list(default_metric_mapping.keys()), default=list(default_metric_mapping.keys()))
@@ -40,20 +40,13 @@ if additional_metric:
 metric_mapping = {metric: default_metric_mapping.get(metric, metric) for metric in selected_metrics}
 
 # Time period selection
-additional_periods_input = st.text_input("Add more time periods (comma-separated):")
+selected_time_periods = st.multiselect("Select time periods to extract:", options=default_time_periods, default=default_time_periods)
+additional_period = st.text_input("Add more time periods (comma-separated)")
 
-# Combine and deduplicate
-combined_time_periods = default_time_periods.copy()
-if additional_periods_input:
-    additional_periods = [p.strip() for p in additional_periods_input.split(',') if p.strip()]
-    combined_time_periods = list(dict.fromkeys(default_time_periods + additional_periods))  # maintain order, remove duplicates
-
-# Let user select and reorder freely
-selected_time_periods = st.multiselect(
-    "Select and order time periods to extract:",
-    options=combined_time_periods,
-    default=combined_time_periods
-)
+if additional_period:
+    for period in [p.strip() for p in additional_period.split(',') if p.strip()]:
+        if period not in selected_time_periods:
+            selected_time_periods.append(period)
 
 security_codes_input = st.text_area("Enter Security Codes (one per line or comma separated):")
 
@@ -133,7 +126,7 @@ if st.button("Scrape All and Save"):
 
             with open(excel_filename, "rb") as file:
                 st.download_button(
-                    label="📅 Download Updated Quaterly Excel",
+                    label="📅 Download Updated Excel",
                     data=file,
                     file_name=excel_filename,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
