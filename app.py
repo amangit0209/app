@@ -61,6 +61,8 @@ if st.button("Scrape All and Save"):
     if urls:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox") # Add this
+        chrome_options.add_argument("--disable-dev-shm-usage")
         driver = webdriver.Chrome(options=chrome_options)
 
         all_new_rows = []
