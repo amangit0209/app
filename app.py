@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
 import time
 
 # Default mappings and periods
@@ -61,6 +63,7 @@ if st.button("Scrape All and Save"):
     if urls:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
 
         all_new_rows = []
