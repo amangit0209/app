@@ -21,7 +21,7 @@ metric_mapping = {
 }
 
 # Fixed periods we expect
-time_periods = ["Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
+time_periods = ["Dec-25","Dec-24", "Sep-24", "Jun-24", "Mar-24", "Dec-23", "FY 23-24"]
 
 # Excel file name
 excel_filename = "Financials_Data_Filled.xlsx"
