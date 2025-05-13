@@ -62,7 +62,10 @@ urls = [f"https://www.bseindia.com/stock-share-price/{code}/{code}/{code}/financ
 if st.button("Scrape All and Save"):
     if urls:
         chrome_options = Options()
+        chrome_options.binary_location = "/usr/bin/google-chrome"    # point to the installed Chrome
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")                  # required in many container environments
+        chrome_options.add_argument("--disable-dev-shm-usage") 
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
 
