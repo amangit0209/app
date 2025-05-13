@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+venv/
+.env
+.env/
+
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Streamlit
+.streamlit/
+
+# Selenium / webdriver-manager caches
+driver_cache/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Docker files
+*.log
+
+docker-compose.override.yml
+
+# OS generated files
+.DS_Store
+Thumbs.db
