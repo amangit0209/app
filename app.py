@@ -64,7 +64,7 @@ if st.button("Scrape All and Save"):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
         all_new_rows = []
 
